@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.7.0
+# Version: 0.7.1
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
@@ -39,7 +39,7 @@
 # CONFIG
 ################################################################################
 # Log should be sent to
-MAIL_TO="me@example.com, you@example.com";
+MAIL_TO="me@example.com, you@example.com"
 
 # Path to log file
 LOG="/var/log/vmware-backup.log"
@@ -53,7 +53,7 @@ BACKUP_PATH="/vmware/backup"
 
 # Wait 10 x n seconds for vmware quest shutdown, until we send a failure
 # Usually no need to change this
-TIMEOUT=10;
+TIMEOUT=10
 ################################################################################
 
 usage()
@@ -68,31 +68,33 @@ resumes the image, then optionally compresses the content. This script is usuall
 started by cron (see example below).
 
 OPTIONS:
-   -h      	   	Show this message
+	-h		Show this message
 
-   -H 		    	Optional, recommended: FQDN or IP of virtual host p.e. vm-host1.example.com.
+	-H		Optional, recommended: FQDN or IP of virtual host p.e. vm-host1.example.com.
 			Make sure this script is able to login by Secure Shell with user root without 
 			password (See http://www.debian-administration.org/articles/152). 
 			
-   -D		     	Directory of virtual host
+	-D		Directory of virtual host
    
-   -F 			Backup to file name without ending, 
+    -F		Backup to file name without ending, 
 			.tar, .tar.gz will be automatically added.
 
-   -C 			Optional compression (gzip or bzip)
+	-R		Use Rsync instead of tar -F and -C becomes obsolte with this option
+
+	-C		Optional compression (gzip or bzip)
    
-   -v      		Verbose
+	-v		Verbose
 
 EXAMPLE:
-   00 22 * * 1-5 $0 -D webserver -F webserver-backup -H www.example.com -C gzip
+	00 22 * * 1-5 $0 -D webserver -F webserver-backup -H www.example.com -C gzip
 
 DEFAULTS:
-   Mails go to:		$MAIL_TO
-   Log Path is:	 	$LOG
-   VMware Parent Path: 	$VM_PARENT_PATH
-   Backup Path: 	$BACKUP_PATH
+	Mails go to:			$MAIL_TO
+	Log Path is:	 		$LOG
+	VMware Parent Path:		$VM_PARENT_PATH
+	Backup Path: 			$BACKUP_PATH
 
-   You can change these defaults by editing the CONFIG section in $0.
+	You can change these defaults by editing the CONFIG section in $0.
 
 EOF
 }
@@ -100,18 +102,18 @@ EOF
 # write to log 
 writeLog() 
 {
-        echo "`date`: $1" >> $LOG
-        echo "`date`: $1" >> $LOG_TMP
+	echo "`date`: $1" >> $LOG
+	echo "`date`: $1" >> $LOG_TMP
 	if [ $VERBOSE -eq 1 ] 
 	then
-        	echo "`date`: $1"
+	   	echo "`date`: $1"
 	fi
 }
 
 # mail the temp log
 mailLog()
 {
-        echo "$1:`cat $LOG_TMP`" |  mail -s "`hostname`: VMware Backup $HOST: $1" $MAIL_TO ;
+	echo "$1:`cat $LOG_TMP`" |  mail -s "`hostname`: VMware Backup $HOST: $1" $MAIL_TO 
 }
 
 # check failures
@@ -119,33 +121,33 @@ checkResult() {
 
 	if [ $? -ne 0 ]
 	then
-        	# check if the vm host ist down and if so, try to restart
+		# check if the vm host ist down and if so, try to restart
 		STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
 
 		if [ $STATE -eq 1 ]
 		then
 			writeLog "Starting VMware image: $VM_VMX_PATH"
-			vmware-cmd $VM_VMX_PATH start;
+			vmware-cmd $VM_VMX_PATH start
 			writeLog "Tried to restart at `date` ..."
 		fi
 
         # send a mail
         mailLog "Backup failed: $1"
-        exit 1;
+        exit 1
 	fi
 }
 
+# default 
 VM_PATH=
 BACKUP_FILE=
 HOST=
 VM_NAME=
 VM_VMX_FILE=
-
-# optional
+USE_RSYNC=0
 COMPRESSION=
 VERBOSE=0
 
-while getopts ÒhH:D:F:C:vÓ OPTION
+while getopts hH:D:F:R:C:v OPTION
 do
      if [ `echo "$OPTARG" | egrep '^-' | wc -l` -eq 1 ]
      then
@@ -153,34 +155,40 @@ do
         exit 1
      fi
 
-     case $OPTION in
-         h)
-             usage
-             exit 1
-             ;;
-         H)
-             HOST=$OPTARG
-             ;;
-         D)
-             VM_PATH=$VM_PARENT_PATH/$OPTARG
-	     VM_NAME=$OPTARG
-             ;;
-	 F)
-             BACKUP_FILE=$OPTARG
-	     ;;
-	 C)
-             COMPRESSION=$OPTARG
-	     ;;
-         v)
-             VERBOSE=1
-             ;;
-         ?)
-             usage
-             exit
-             ;;
+	case $OPTION in
+		h)
+			usage
+			exit 1
+			;;
+		H)
+			HOST=$OPTARG
+			;;
+		D)
+			VM_PATH=$VM_PARENT_PATH/$OPTARG
+			VM_NAME=$OPTARG
+			;;
+		F)
+			BACKUP_FILE=$OPTARG
+			;;
+		C)
+			COMPRESSION=$OPTARG
+			;;
+		R)
+			USE_RSYNC=1
+			COMPRESSION=
+			BACKUP_FILE=
+			;;
+		v)
+			VERBOSE=1
+			;;
+		?)
+			usage
+			exit 1
+			;;
      esac
 done
 
+# missing argument?
 if [[ -z $VM_PATH ]] || [[ -z $BACKUP_FILE ]] || [[ -z $HOST ]]
 then
      usage
@@ -190,119 +198,142 @@ fi
 # clear Temp Log
 echo "" > $LOG_TMP
 
+# looking for the vmx file
 VM_VMX_PATH=`find ${VM_PATH} -type f -name *.vmx -print`
-checkResult "Could not find vmx file";
-
-TAR_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
+checkResult "Could not find vmx file"
 
 # write some output to the logs
-writeLog "Virtual Machine Directory $VM_PATH";
-writeLog "Virtual Machine VMX File $VM_VMX_PATH";
-writeLog "Virtual Machines IP or Host is $HOST";
-writeLog "Output Tar Name $TAR_NAME";
+writeLog "Virtual Machine Directory ${VM_PATH}"
+writeLog "Virtual Machine VMX File ${VM_VMX_PATH}"
+writeLog "Virtual Machines IP or Host is ${HOST}"
 
+# not using rsync
+if [[ -z $USE_RSYNC ]]
+	then
+	TAR_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
+	writeLog "Output Tar Name ${TAR_NAME}"
+else
+	writeLog "Output Rsync to Directory ${BACKUP_PATH}/${VM_PATH}"
+fi
+
+# is compression set? reseted on rsync mode don't worry
 if [ "${COMPRESSION}" == "" ]
 then
-	writeLog "Compression none";
+	writeLog "Compression none"
 else
-	writeLog "Compression $COMPRESSION";
+	writeLog "Compression ${COMPRESSION}"
 fi
 
-writeLog "Starting backup at `date`";
+# backuping starts
+writeLog "Starting backup at `date`"
 
-STATE=`vmware-cmd $VM_VMX_PATH getstate | grep on | wc -l`
-
-# grep for state = on, if its there then stop
+# stopping virtual machine
+STATE=`vmware-cmd ${VM_VMX_PATH} getstate | grep on | wc -l`
 if [ $STATE -eq 1 ]
 then
-  writeLog "Shutting down VMware image $VM_VMX_PATH";
-  STATE=`vmware-cmd $VM_VMX_PATH getheartbeat | grep "getheartbeat() = 0"  | wc -l`
-  if [ $STATE -ne 1 ]
-  then
-    writeLog "VMware Tools available, so shutting down with tools..."
-    vmware-cmd $VM_VMX_PATH stop
-  else  
-    writeLog "VMWare Tools unvailable, so shutting down by ssh..."
-    ssh root@"$HOST" shutdown -h now;
-    checkResult "Unable to ssh to $HOST";
-  fi
+	writeLog "Shutting down VMware image ${VM_VMX_PATH}"
+	STATE=`vmware-cmd $VM_VMX_PATH getheartbeat | grep "getheartbeat() = 0"  | wc -l`
+	
+	# shutting down with tools 	
+	if [ $STATE -ne 1 ]
+	then
+		writeLog "VMware Tools available, so shutting down with tools..."
+		vmware-cmd $VM_VMX_PATH stop
+	
+	# otherwise trying to shut down by SSH	
+	else  
+		writeLog "VMWare Tools unvailable, so shutting down by ssh..."
+		ssh root@"$HOST" shutdown -h now
+		checkResult "Unable to ssh to ${HOST}"
+	fi
 fi
 
-# we try to shutdown the host, so we have to wait until it is halted
+# we tried to shutdown the host, so we have to wait until it is halted
 COUNTER=0;
 while true;
 do
-  STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
-  if [ $STATE -eq 1 ]
-  then
-    writeLog "Virtual Maschine has shut down.";
-    break;
-  fi
+	STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
+	if [ $STATE -eq 1 ]
+	then
+		writeLog "Virtual Maschine has shut down."
+		break
+	fi
 
-  # timemout?
-  if [ $COUNTER -eq $TIMEOUT ]
-  then
-    writeLog "Virtual Maschine shut down failed.";
-    writeLog "Could not shut down Virtual Machine $VM_VMX_PATH"
-        mailLog "VMware Backup failed on $HOST";
-    exit;
-    break;
-  fi
+	# timemout?
+	if [ $COUNTER -eq $TIMEOUT ]
+	then
+		writeLog "Virtual Maschine shut down failed."
+		writeLog "Could not shut down Virtual Machine ${VM_VMX_PATH}"
+		mailLog "Backup failed"
+    	exit 1
+    	break
+	fi
 
-  writeLog "Virtual Maschine is still running, waiting...";
-  sleep 10;
-  COUNTER=$[$COUNTER+1];
+	writeLog "Virtual Maschine is still running, waiting..."
+	sleep 10
+	COUNTER=$[$COUNTER+1]
 done
+sleep 10
 
-sleep 10;
-
-writeLog "Changing directory to $VM_PARENT_PATH"
-writeLog "Taring VMWare directory $VM_PATH";
-(
-cd $VM_PARENT_PATH
-tar cvf "${TAR_NAME}" "${VM_NAME}";
-)
-
-checkResult "Unable to create the file $TAR_NAME";
-writeLog "Tar completed"
+# virtual machine has shut down
+# rsyncing or taring now?
+writeLog "Changing directory to ${VM_PARENT_PATH}"
+if [[ -z $USE_RSYNC ]]
+then
+	# so taring
+	writeLog "Taring VMWare directory ${VM_PATH}"
+	(
+	cd $VM_PARENT_PATH
+	tar cvf "${TAR_NAME}" "${VM_NAME}"
+	)
+	checkResult "Unable to create the file ${TAR_NAME}"
+	writeLog "Tar completed"
+else
+	# so rsyncing
+	writeLog "Rsyncing VMWare directory ${VM_PATH}"
+	(
+	cd $VM_PARENT_PATH 
+	echo "rsync -a ${BACKUP_PATH} ${VM_PATH}"
+	)
+	checkResult "Unable to rsync the file ${VM_PATH}"
+	writeLog "Rsync completed"
+fi
 
 # check if the state is off, so restart the guest
 STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
 
 if [ $STATE -eq 1 ]
 then
-  writeLog "Starting VMware image $VM_VMX_PATH";
-  vmware-cmd "$VM_VMX_PATH" start;
-  checkResult "Unable to restart $VM_VMX_PATH"
+	writeLog "Starting VMware image $VM_VMX_PATH"
+	vmware-cmd "$VM_VMX_PATH" start
+	checkResult "Unable to restart $VM_VMX_PATH"
 fi
 
 # which compression?
 case $COMPRESSION in
-
-        bzip)
-                writeLog "Bzip2ing the file"
-                bzip2 "$TAR_NAME"
-                checkResult "Unable to bzip2 the tar"
+	bzip)
+		writeLog "Bzip2ing the file"
+		bzip2 "$TAR_NAME"
+		checkResult "Unable to bzip2 the tar"
         ;;
-        # gzip the file
-        gzip)
-                writeLog "Gzipping file"
-                gzip "$TAR_NAME" -f --rsyncable
-                checkResult "Unable to Gzip the tar"
+    # gzip the file
+	gzip)
+		writeLog "Gzipping file"
+		gzip "$TAR_NAME" -f --rsyncable
+		checkResult "Unable to Gzip the tar"
         ;;
-        # default case, print out tar name
-        *)
-                writeLog "Output file is $TAR_NAME";
-        ;;
+	*)
+    	;;
 esac
 
 STATE=`vmware-cmd $VM_VMX_PATH getstate | grep on | wc -l`
-writeLog "Finished backup at `date`";
+writeLog "Finished backup at `date`"
 
+# final mailing
 if [ $STATE -eq 1 ]
 then
-  mailLog "Backup successful"
+	mailLog "Backup successful"
 else
-  mailLog "Backup failed"
+	mailLog "Backup failed"
 fi
-exit 0
+exit 1
