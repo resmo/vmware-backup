@@ -1,3 +1,7 @@
+VERSION 0.7.1
+- added rsync by option -R
+- code cleanup
+
 VERSION 0.7.0
 - changed to Unix style options see ./vmware-script.sh -h. Your CRON jobs will not work anymore!
 - added check of arguments
