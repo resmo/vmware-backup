@@ -1,6 +1,9 @@
-VERSION 0.7.1
+VERSION 0.8.0
 - added rsync by option -R
+- option value change -D becomes -N. see ./vmware-script.sh -h. Your CRON jobs will not work anymore!
+- added -D for rsync remote destination 
 - code cleanup
+- fixed typos
 
 VERSION 0.7.0
 - changed to Unix style options see ./vmware-script.sh -h. Your CRON jobs will not work anymore!

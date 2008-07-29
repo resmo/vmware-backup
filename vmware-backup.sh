@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.7.1
+# Version: 0.8.0
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
@@ -20,7 +20,7 @@
 #
 # Support
 # -------------------
-# Please report any problems, improvements or corrections to me. thanks.
+# Please report any problems, improvements or corrections to me. Thanks.
 #
 # License:
 # -------------------
@@ -38,8 +38,8 @@
 ################################################################################
 # CONFIG
 ################################################################################
-# Log should be sent to
-MAIL_TO="me@example.com, you@example.com"
+# Log should be sent to, multiple separated by ","
+MAIL_TO="root"
 
 # Path to log file
 LOG="/var/log/vmware-backup.log"
@@ -70,23 +70,29 @@ started by cron (see example below).
 OPTIONS:
 	-h		Show this message
 
-	-H		Optional, recommended: FQDN or IP of virtual host p.e. vm-host1.example.com.
+	-H		FQDN or IP of virtual host p.e. vm-host1.example.com.
 			Make sure this script is able to login by Secure Shell with user root without 
 			password (See http://www.debian-administration.org/articles/152). 
 			
-	-D		Directory of virtual host
-   
-    -F		Backup to file name without ending, 
+  	-N		Directory of virtual host
+  
+	-F		Backup to File name without ending, 
 			.tar, .tar.gz will be automatically added.
 
-	-R		Use Rsync instead of tar -F and -C becomes obsolte with this option
+	-R		Use Rsync instead of tar, -F and -C will be ignored
 
-	-C		Optional compression (gzip or bzip)
+	-D		Optional: set Destination for Rsync mode -R (SSH is used) 
+			p.e. root@backup.example.com:/backup, otherwise Rsync goes to local
+			backup directory specified in the config section. 
    
+	-C		Optional: compression (gzip or bzip), ignored if -R is set 
+	
 	-v		Verbose
 
 EXAMPLE:
-	00 22 * * 1-5 $0 -D webserver -F webserver-backup -H www.example.com -C gzip
+	00 22 * * 1-5 $0 -N webserver -F webserver-backup -H www.example.com -C gzip
+	00 23 * * 1-5 $0 -N webserver -R -H www.example.com -v
+	00 24 * * 1-5 $0 -N webserver -D root@backup.example.com:/backups -H www.example.com -v
 
 DEFAULTS:
 	Mails go to:			$MAIL_TO
@@ -144,10 +150,11 @@ HOST=
 VM_NAME=
 VM_VMX_FILE=
 USE_RSYNC=0
+RSYNC_DESTINATION=
 COMPRESSION=
 VERBOSE=0
 
-while getopts hH:D:F:R:C:v OPTION
+while getopts hH:D:N:F:RC:v OPTION
 do
      if [ `echo "$OPTARG" | egrep '^-' | wc -l` -eq 1 ]
      then
@@ -163,7 +170,7 @@ do
 		H)
 			HOST=$OPTARG
 			;;
-		D)
+		N)
 			VM_PATH=$VM_PARENT_PATH/$OPTARG
 			VM_NAME=$OPTARG
 			;;
@@ -178,6 +185,12 @@ do
 			COMPRESSION=
 			BACKUP_FILE=
 			;;
+		D)
+                        USE_RSYNC=1
+                        COMPRESSION=
+                        BACKUP_FILE=
+			RSYNC_DESTINATION=$OPTARG
+                        ;;		
 		v)
 			VERBOSE=1
 			;;
@@ -189,10 +202,10 @@ do
 done
 
 # missing argument?
-if [[ -z $VM_PATH ]] || [[ -z $BACKUP_FILE ]] || [[ -z $HOST ]]
+if [[ -z $VM_PATH ]] || [[ -z $HOST ]] || ( [[ -z $BACKUP_FILE ]] && [[ -z $USE_RSYNC ]] )
 then
-     usage
-     exit 1
+	usage
+	exit 1
 fi
 
 # clear Temp Log
@@ -213,7 +226,7 @@ if [[ -z $USE_RSYNC ]]
 	TAR_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
 	writeLog "Output Tar Name ${TAR_NAME}"
 else
-	writeLog "Output Rsync to Directory ${BACKUP_PATH}/${VM_PATH}"
+	writeLog "Output Rsync to Directory ${BACKUP_PATH}/${VM_NAME}"
 fi
 
 # is compression set? reseted on rsync mode don't worry
@@ -255,21 +268,21 @@ do
 	STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
 	if [ $STATE -eq 1 ]
 	then
-		writeLog "Virtual Maschine has shut down."
+		writeLog "Virtual Machine has shut down."
 		break
 	fi
 
 	# timemout?
 	if [ $COUNTER -eq $TIMEOUT ]
 	then
-		writeLog "Virtual Maschine shut down failed."
+		writeLog "Virtual Machine shut down failed."
 		writeLog "Could not shut down Virtual Machine ${VM_VMX_PATH}"
 		mailLog "Backup failed"
     	exit 1
     	break
 	fi
 
-	writeLog "Virtual Maschine is still running, waiting..."
+	writeLog "Virtual Machine is still running, waiting..."
 	sleep 10
 	COUNTER=$[$COUNTER+1]
 done
@@ -291,11 +304,22 @@ then
 else
 	# so rsyncing
 	writeLog "Rsyncing VMWare directory ${VM_PATH}"
-	(
-	cd $VM_PARENT_PATH 
-	echo "rsync -a ${BACKUP_PATH} ${VM_PATH}"
-	)
-	checkResult "Unable to rsync the file ${VM_PATH}"
+	if [[ -z $RSYNC_DESTINATION ]]
+	then
+		(
+		mkdir -p ${BACKUP_PATH}/${VM_NAME}
+		cd $VM_PARENT_PATH 
+		rsync -av ${VM_PATH} ${BACKUP_PATH}/${VM_NAME}
+		)
+	else
+		writeLog "Rsyncing to Destination ${RSYNC_DESTINATION}"
+		(
+		cd $VM_PARENT_PATH
+                rsync -avz ${VM_PATH} ${RSYNC_DESTINATION}
+		)
+	fi
+
+	checkResult "Unable to rsync ${VM_PATH}"
 	writeLog "Rsync completed"
 fi
 
@@ -316,7 +340,7 @@ case $COMPRESSION in
 		bzip2 "$TAR_NAME"
 		checkResult "Unable to bzip2 the tar"
         ;;
-    # gzip the file
+	# gzip the file
 	gzip)
 		writeLog "Gzipping file"
 		gzip "$TAR_NAME" -f --rsyncable
@@ -336,4 +360,4 @@ then
 else
 	mailLog "Backup failed"
 fi
-exit 1
+
