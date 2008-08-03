@@ -1,3 +1,6 @@
+VERSION 0.8.1
+- added new option -S for disabling restart of virtual machine
+
 VERSION 0.8.0
 - added rsync by option -R
 - option value change -D becomes -N. see ./vmware-script.sh -h. Your CRON jobs will not work anymore!
