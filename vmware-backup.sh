@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.8.0
+# Version: 0.8.1
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
@@ -85,6 +85,8 @@ OPTIONS:
 			p.e. root@backup.example.com:/backup, otherwise Rsync goes to local
 			backup directory specified in the config section. 
    
+	-S		Optional: set restart after backup, default is 1 alias yes
+
 	-C		Optional: compression (gzip or bzip), ignored if -R is set 
 	
 	-v		Verbose
@@ -133,8 +135,11 @@ checkResult() {
 		if [ $STATE -eq 1 ]
 		then
 			writeLog "Starting VMware image: $VM_VMX_PATH"
-			vmware-cmd $VM_VMX_PATH start
-			writeLog "Tried to restart at `date` ..."
+			if [ $VM_START -eq 1 ]
+			then
+				vmware-cmd $VM_VMX_PATH start
+				writeLog "Tried to restart at `date` ..."
+			fi
 		fi
 
         # send a mail
@@ -149,12 +154,13 @@ BACKUP_FILE=
 HOST=
 VM_NAME=
 VM_VMX_FILE=
+VM_START=1 
 USE_RSYNC=0
 RSYNC_DESTINATION=
 COMPRESSION=
 VERBOSE=0
 
-while getopts hH:D:N:F:RC:v OPTION
+while getopts hH:D:N:F:S:RC:v OPTION
 do
      if [ `echo "$OPTARG" | egrep '^-' | wc -l` -eq 1 ]
      then
@@ -184,6 +190,9 @@ do
 			USE_RSYNC=1
 			COMPRESSION=
 			BACKUP_FILE=
+			;;
+		S)
+			VM_START=$OPTARG
 			;;
 		D)
                         USE_RSYNC=1
@@ -219,6 +228,7 @@ checkResult "Could not find vmx file"
 writeLog "Virtual Machine Directory ${VM_PATH}"
 writeLog "Virtual Machine VMX File ${VM_VMX_PATH}"
 writeLog "Virtual Machines IP or Host is ${HOST}"
+writeLog "Virtual Machines Start after backup is set to ${VM_START}"
 
 # not using rsync
 if [[ -z $USE_RSYNC ]]
@@ -326,7 +336,7 @@ fi
 # check if the state is off, so restart the guest
 STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
 
-if [ $STATE -eq 1 ]
+if [ $STATE -eq 1 && $VM_START -eq 1 ]
 then
 	writeLog "Starting VMware image $VM_VMX_PATH"
 	vmware-cmd "$VM_VMX_PATH" start
@@ -350,14 +360,6 @@ case $COMPRESSION in
     	;;
 esac
 
-STATE=`vmware-cmd $VM_VMX_PATH getstate | grep on | wc -l`
 writeLog "Finished backup at `date`"
-
-# final mailing
-if [ $STATE -eq 1 ]
-then
-	mailLog "Backup successful"
-else
-	mailLog "Backup failed"
-fi
+mailLog "Backup successful"
 
