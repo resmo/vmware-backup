@@ -1,3 +1,6 @@
+VERSION 0.8.2
+- fixed rsync problem reported by Matteo Costa
+
 VERSION 0.8.1
 - added new option -S for disabling restart of virtual machine
 
