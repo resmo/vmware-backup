@@ -1,3 +1,8 @@
+VERSION 0.8.3
+ - added tar-gzip for option -C so tar uses options cvzf and does the taring and gzipping in one step.
+   This will take more time until the VM will be restarted, but uses much less space. 
+   Reported by Matteo Costa. 
+
 VERSION 0.8.2
 - fixed rsync problem reported by Matteo Costa
 

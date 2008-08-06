@@ -87,7 +87,11 @@ OPTIONS:
    
 	-S		Optional: set restart after backup, default is 1 alias yes
 
-	-C		Optional: compression (gzip or bzip), ignored if -R is set 
+	-C		Optional: compression (tar-gzip, gzip or bzip), ignored if -R is set.
+			
+			if tar-gzip is set, the contents will be tar gzipped in one step. This may 
+			take more time until the vm will be restarted, but uses less of space then taring 
+			the contents, restarting vm and gzipping afterwards (-C gzip). 
 	
 	-v		Verbose
 
@@ -307,7 +311,12 @@ then
 	writeLog "Taring VMWare directory ${VM_PATH}"
 	(
 	cd $VM_PARENT_PATH
-	tar cvf "${TAR_NAME}" "${VM_NAME}"
+	if [ "$COMPRESSION" -eq "tar-gzip" ] 
+	then
+		tar cvf "${TAR_NAME}" "${VM_NAME}"
+	else
+		tar cvzf "${TAR_NAME}" "${VM_NAME}"
+	fi
 	)
 	checkResult "Unable to create the file ${TAR_NAME}"
 	writeLog "Tar completed"
