@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.8.1
+# Version: 0.8.2
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
@@ -155,7 +155,7 @@ HOST=
 VM_NAME=
 VM_VMX_FILE=
 VM_START=1 
-USE_RSYNC=0
+USE_RSYNC=
 RSYNC_DESTINATION=
 COMPRESSION=
 VERBOSE=0
