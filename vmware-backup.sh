@@ -311,7 +311,7 @@ then
 	writeLog "Taring VMWare directory ${VM_PATH}"
 	(
 	cd $VM_PARENT_PATH
-	if [ "$COMPRESSION" -eq "tar-gzip" ] 
+	if [ "$COMPRESSION" != "tar-gzip" ] 
 	then
 		tar cvf "${TAR_NAME}" "${VM_NAME}"
 	else
