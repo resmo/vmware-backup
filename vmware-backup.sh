@@ -315,11 +315,13 @@ then
 	then
 		tar cvf "${TAR_NAME}" "${VM_NAME}"
 	else
+		writeLog "Taring and gzipping at once"
+		TAR_NAME="${TAR_NAME}".gz
 		tar cvzf "${TAR_NAME}" "${VM_NAME}"
 	fi
 	)
 	checkResult "Unable to create the file ${TAR_NAME}"
-	writeLog "Tar completed"
+	writeLog "Tar to file ${TAR_NAME} completed"
 else
 	# so rsyncing
 	writeLog "Rsyncing VMWare directory ${VM_PATH}"
@@ -345,7 +347,7 @@ fi
 # check if the state is off, so restart the guest
 STATE=`vmware-cmd $VM_VMX_PATH getstate | grep off | wc -l`
 
-if [ $STATE -eq 1 && $VM_START -eq 1 ]
+if [ $STATE -eq 1 ] && [ $VM_START -eq 1 ]
 then
 	writeLog "Starting VMware image $VM_VMX_PATH"
 	vmware-cmd "$VM_VMX_PATH" start
