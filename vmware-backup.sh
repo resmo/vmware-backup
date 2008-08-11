@@ -91,7 +91,7 @@ OPTIONS:
 			
 			if tar-gzip is set, the contents will be tar gzipped in one step. This may 
 			take more time until the vm will be restarted, but uses less of space then taring 
-			the contents, restarting vm and gzipping afterwards (-C gzip). 
+			the contents, restarting the vm and gzipping afterwards (-C gzip). 
 	
 	-v		Verbose
 
@@ -106,7 +106,7 @@ DEFAULTS:
 	VMware Parent Path:		$VM_PARENT_PATH
 	Backup Path: 			$BACKUP_PATH
 
-	You can change these defaults by editing the CONFIG section in $0.
+	You can change these settings by editing the CONFIG section in $0.
 
 EOF
 }
@@ -231,8 +231,8 @@ checkResult "Could not find vmx file"
 # write some output to the logs
 writeLog "Virtual Machine Directory ${VM_PATH}"
 writeLog "Virtual Machine VMX File ${VM_VMX_PATH}"
-writeLog "Virtual Machines IP or Host is ${HOST}"
-writeLog "Virtual Machines Start after backup is set to ${VM_START}"
+writeLog "Virtual Machine's IP or Host is ${HOST}"
+writeLog "Virtual Machine starts after backup is set to ${VM_START}"
 
 # not using rsync
 if [[ -z $USE_RSYNC ]]
