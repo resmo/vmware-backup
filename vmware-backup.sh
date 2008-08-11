@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.8.2
+# Version: 0.8.3
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
