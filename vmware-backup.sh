@@ -373,4 +373,4 @@ esac
 
 writeLog "Finished backup at `date`"
 mailLog "Backup successful"
-
+exit 0
