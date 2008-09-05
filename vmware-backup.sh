@@ -311,14 +311,22 @@ then
 	writeLog "Taring VMWare directory ${VM_PATH}"
 	(
 	cd $VM_PARENT_PATH
-	if [ "$COMPRESSION" != "tar-gzip" ] 
-	then
+	
+	case $COMPRESSION in
+        tar-gzip)
+        	writeLog "Taring and gzipping at once"
+        	TAR_NAME="${TAR_NAME}".gz
+        	tar cvzf "${TAR_NAME}" "${VM_NAME}"
+	;;
+        tar-lzop)
+		writeLog "Taring und lzoping at once"
+		TAR_NAME="${TAR_NAME}".lzo
+		tar --use-compress-program=lzop -cf "${TAR_NAME}" "${VM_NAME}"		
+        ;;
+        *)
 		tar cvf "${TAR_NAME}" "${VM_NAME}"
-	else
-		writeLog "Taring and gzipping at once"
-		TAR_NAME="${TAR_NAME}".gz
-		tar cvzf "${TAR_NAME}" "${VM_NAME}"
-	fi
+        ;;
+	esac
 	)
 	checkResult "Unable to create the file ${TAR_NAME}"
 	writeLog "Tar to file ${TAR_NAME} completed"
