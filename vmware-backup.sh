@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.8.3
+# Version: 0.8.4
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
@@ -55,11 +55,16 @@ BACKUP_PATH="/vmware/backup"
 # Usually no need to change this
 TIMEOUT=10
 ################################################################################
+VERSION='0.8.4'
+AUTHOR='rene moser <mail@renemoser.net>'
 
 usage()
 {
 cat << EOF
 usage: $0 options
+
+Version $VERSION
+Author $AUTHOR
 
 This small script is used to backup a virtual machine of VMware Server.
 To stop a virtual machine, SSH access to the machine (public key distribution) 
