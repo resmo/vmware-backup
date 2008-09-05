@@ -1,6 +1,7 @@
 VERSION 0.8.4
  - added tar-lzop for option -C so tar uses lzop and does the taring and lzoping in one step. (not yet testet)
  - added exit status 0 at the bottom line
+ - replaced #!/bin/sh with #!/bin/bash to make sure we use bash
 
 VERSION 0.8.3
  - added tar-gzip for option -C so tar uses options cvzf and does the taring and gzipping in one step.

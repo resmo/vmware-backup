@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
@@ -87,7 +87,7 @@ OPTIONS:
    
 	-S		Optional: set restart after backup, default is 1 alias yes
 
-	-C		Optional: compression (tar-gzip, gzip or bzip), ignored if -R is set.
+	-C		Optional: compression (tar-gzip, tar-lzop, gzip or bzip), ignored if -R is set.
 			
 			if tar-gzip is set, the contents will be tar gzipped in one step. This may 
 			take more time until the vm will be restarted, but uses less of space then taring 
@@ -244,7 +244,7 @@ else
 fi
 
 # is compression set? reseted on rsync mode don't worry
-if [ "${COMPRESSION}" == "" ]
+if [ "${COMPRESSION}" = "" ]
 then
 	writeLog "Compression none"
 else
