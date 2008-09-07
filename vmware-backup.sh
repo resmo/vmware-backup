@@ -243,7 +243,7 @@ writeLog "Virtual Machine starts after backup is set to ${VM_START}"
 if [[ -z $USE_RSYNC ]]
 	then
 	OUTPUT_FILE_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
-	writeLog "Output Tar Name ${OUTPUT_FILE_NAME}"
+	writeLog "Output File Name ${OUTPUT_FILE_NAME}"
 else
 	writeLog "Output Rsync to Directory ${BACKUP_PATH}/${VM_NAME}"
 fi
@@ -313,7 +313,7 @@ writeLog "Changing directory to ${VM_PARENT_PATH}"
 if [[ -z $USE_RSYNC ]]
 then
 	# so taring
-	writeLog "Taring VMWare directory ${VM_PATH}"
+	writeLog "Backuping VMWare directory ${VM_PATH}"
 	(
 	cd $VM_PARENT_PATH
 	
@@ -333,12 +333,13 @@ then
                 zip "${OUTPUT_FILE_NAME}" "${VM_NAME}/*"
         ;;
         *)
+		writeLog "Taring"
 		tar cvf "${OUTPUT_FILE_NAME}" "${VM_NAME}"
         ;;
 	esac
 	)
 	checkResult "Unable to create the file ${OUTPUT_FILE_NAME}"
-	writeLog "Tar to file ${OUTPUT_FILE_NAME} completed"
+	writeLog "Backuping to file ${OUTPUT_FILE_NAME} completed"
 else
 	# so rsyncing
 	writeLog "Rsyncing VMWare directory ${VM_PATH}"
