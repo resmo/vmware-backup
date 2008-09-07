@@ -92,7 +92,7 @@ OPTIONS:
    
 	-S		Optional: set restart after backup, default is 1 alias yes
 
-	-C		Optional: compression (tar-gzip, tar-lzop, gzip or bzip), ignored if -R is set.
+	-C		Optional: compression (tar-gzip, tar-lzop, zip, gzip or bzip), ignored if -R is set.
 			
 			if tar-gzip is set, the contents will be tar gzipped in one step. This may 
 			take more time until the vm will be restarted, but uses less of space then taring 
@@ -242,8 +242,8 @@ writeLog "Virtual Machine starts after backup is set to ${VM_START}"
 # not using rsync
 if [[ -z $USE_RSYNC ]]
 	then
-	TAR_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
-	writeLog "Output Tar Name ${TAR_NAME}"
+	OUTPUT_FILE_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
+	writeLog "Output Tar Name ${OUTPUT_FILE_NAME}"
 else
 	writeLog "Output Rsync to Directory ${BACKUP_PATH}/${VM_NAME}"
 fi
@@ -320,21 +320,25 @@ then
 	case $COMPRESSION in
         tar-gzip)
         	writeLog "Taring and gzipping at once"
-        	TAR_NAME="${TAR_NAME}".gz
-        	tar cvzf "${TAR_NAME}" "${VM_NAME}"
+        	OUTPUT_FILE_NAME="${OUTPUT_FILE_NAME}".gz
+        	tar cvzf "${OUTPUT_FILE_NAME}" "${VM_NAME}"
 	;;
         tar-lzop)
 		writeLog "Taring und lzoping at once"
-		TAR_NAME="${TAR_NAME}".lzo
-		tar --use-compress-program=lzop -cf "${TAR_NAME}" "${VM_NAME}"		
+		OUTPUT_FILE_NAME="${OUTPUT_FILE_NAME}".lzo
+		tar --use-compress-program=lzop -cf "${OUTPUT_FILE_NAME}" "${VM_NAME}"		
+        ;;
+	zip)
+                writeLog "Zipping"
+                zip "${OUTPUT_FILE_NAME}" "${VM_NAME}/*"
         ;;
         *)
-		tar cvf "${TAR_NAME}" "${VM_NAME}"
+		tar cvf "${OUTPUT_FILE_NAME}" "${VM_NAME}"
         ;;
 	esac
 	)
-	checkResult "Unable to create the file ${TAR_NAME}"
-	writeLog "Tar to file ${TAR_NAME} completed"
+	checkResult "Unable to create the file ${OUTPUT_FILE_NAME}"
+	writeLog "Tar to file ${OUTPUT_FILE_NAME} completed"
 else
 	# so rsyncing
 	writeLog "Rsyncing VMWare directory ${VM_PATH}"
@@ -371,13 +375,13 @@ fi
 case $COMPRESSION in
 	bzip)
 		writeLog "Bzip2ing the file"
-		bzip2 "$TAR_NAME"
+		bzip2 "$OUTPUT_FILE_NAME"
 		checkResult "Unable to bzip2 the tar"
         ;;
 	# gzip the file
 	gzip)
 		writeLog "Gzipping file"
-		gzip "$TAR_NAME" -f --rsyncable
+		gzip "$OUTPUT_FILE_NAME" -f --rsyncable
 		checkResult "Unable to Gzip the tar"
         ;;
 	*)
