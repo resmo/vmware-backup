@@ -102,6 +102,7 @@ OPTIONS:
 EXAMPLE:
 	00 22 * * 1-5 $0 -N webserver -F webserver-backup.tar.gz -H www.example.com -C gzip
 	00 22 * * 1-5 $0 -N webserver -F webserver-backup.zip -H www.example.com -C zip
+	00 22 * * 1-5 $0 -N webserver -F webserver-backup.lzo -H www.example.com -C tar-lzop
 	00 23 * * 1-5 $0 -N webserver -R -H www.example.com -v
 	00 24 * * 1-5 $0 -N webserver -D root@backup.example.com:/backups -H www.example.com -v
 
