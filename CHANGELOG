@@ -1,3 +1,9 @@
+VERSION 0.8.6
+- fixed and tested zip compression
+- tested lzop compression
+- removed static file name extension tar, so please add file name extension for -F by yourself like backup.zip, backup.tar.gz
+- added some more examples
+
 VERSION 0.8.5
 - added zip for option -C (not yet tested)
 - updated some log messages
