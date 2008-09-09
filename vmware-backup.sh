@@ -330,7 +330,7 @@ then
         ;;
 	zip)
                 writeLog "Zipping"
-                zip "${OUTPUT_FILE_NAME}" "${VM_NAME}/*"
+                zip -r "${OUTPUT_FILE_NAME}" "${VM_NAME}"
         ;;
         *)
 		writeLog "Taring"
