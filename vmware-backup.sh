@@ -2,7 +2,7 @@
 ################################################################################
 # VMWARE SERVER BACKUP SCRIPT (VSBS)
 #
-# Version: 0.8.4
+# Version: 0.8.5
 # Author: rene moser <mail@renemoser.net>
 # URL: http://www.renemoser.net/projects
 #
@@ -55,7 +55,7 @@ BACKUP_PATH="/vmware/backup"
 # Usually no need to change this
 TIMEOUT=10
 ################################################################################
-VERSION='0.8.4'
+VERSION='0.8.5'
 AUTHOR='rene moser <mail@renemoser.net>'
 
 usage()
