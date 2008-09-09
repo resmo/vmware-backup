@@ -79,18 +79,17 @@ OPTIONS:
 			Make sure this script is able to login by Secure Shell with user root without 
 			password (See http://www.debian-administration.org/articles/152). 
 			
-  	-N		Directory of virtual host
+  	-N		Directory of virtual host.
   
-	-F		Backup to File name without ending, 
-			.tar, .tar.gz will be automatically added.
+	-F		Backup to file name.
 
-	-R		Use Rsync instead of tar, -F and -C will be ignored
+	-R		Use Rsync instead of tar, -F and -C will be ignored.
 
 	-D		Optional: set Destination for Rsync mode -R (SSH is used) 
 			p.e. root@backup.example.com:/backup, otherwise Rsync goes to local
 			backup directory specified in the config section. 
    
-	-S		Optional: set restart after backup, default is 1 alias yes
+	-S		Optional: set restart after backup, default is 1 alias yes.
 
 	-C		Optional: compression (tar-gzip, tar-lzop, zip, gzip or bzip), ignored if -R is set.
 			
@@ -101,7 +100,8 @@ OPTIONS:
 	-v		Verbose
 
 EXAMPLE:
-	00 22 * * 1-5 $0 -N webserver -F webserver-backup -H www.example.com -C gzip
+	00 22 * * 1-5 $0 -N webserver -F webserver-backup.tar.gz -H www.example.com -C gzip
+	00 22 * * 1-5 $0 -N webserver -F webserver-backup.zip -H www.example.com -C zip
 	00 23 * * 1-5 $0 -N webserver -R -H www.example.com -v
 	00 24 * * 1-5 $0 -N webserver -D root@backup.example.com:/backups -H www.example.com -v
 
@@ -242,7 +242,7 @@ writeLog "Virtual Machine starts after backup is set to ${VM_START}"
 # not using rsync
 if [[ -z $USE_RSYNC ]]
 	then
-	OUTPUT_FILE_NAME="${BACKUP_PATH}/${BACKUP_FILE}.tar"
+	OUTPUT_FILE_NAME="${BACKUP_PATH}/${BACKUP_FILE}"
 	writeLog "Output File Name ${OUTPUT_FILE_NAME}"
 else
 	writeLog "Output Rsync to Directory ${BACKUP_PATH}/${VM_NAME}"
@@ -320,12 +320,10 @@ then
 	case $COMPRESSION in
         tar-gzip)
         	writeLog "Taring and gzipping at once"
-        	OUTPUT_FILE_NAME="${OUTPUT_FILE_NAME}".gz
         	tar cvzf "${OUTPUT_FILE_NAME}" "${VM_NAME}"
 	;;
         tar-lzop)
 		writeLog "Taring und lzoping at once"
-		OUTPUT_FILE_NAME="${OUTPUT_FILE_NAME}".lzo
 		tar --use-compress-program=lzop -cf "${OUTPUT_FILE_NAME}" "${VM_NAME}"		
         ;;
 	zip)
